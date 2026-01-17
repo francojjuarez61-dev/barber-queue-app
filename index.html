@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Barber Queue</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <h1>Gestión de Turnos</h1>
+
+  <div id="queue"></div>
+
+  <div class="center-container">
+    <button id="mainButton" class="main-button">INICIAR</button>
+
+    <div id="radialMenu" class="radial hidden">
+      <!-- Velocidad -->
+      <button data-speed="rapido" class="petal left">Rápido</button>
+      <button data-speed="normal" class="petal top">Normal</button>
+      <button data-speed="lento" class="petal right">Lento</button>
+
+      <!-- Servicios -->
+      <button data-service="corte" class="petal bottom-left">Corte</button>
+      <button data-service="corte_barba" class="petal bottom">Corte + Barba</button>
+      <button data-service="corte_barba_sellado" class="petal bottom-right">Corte + Barba + Sellado</button>
+      <button data-service="permanente" class="petal top-left">Permanente</button>
+    </div>
+  </div>
+
+  <button id="finishButton" class="finish-button" disabled>Finalizar</button>
+
+  <script src="app.js"></script>
+</body>
+</html>
