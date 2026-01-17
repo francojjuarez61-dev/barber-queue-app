@@ -1,61 +1,83 @@
 const mainButton = document.getElementById("mainButton");
-const finishButton = document.getElementById("finishButton");
-const radialMenu = document.getElementById("radialMenu");
-const queueDiv = document.getElementById("queue");
+const radial = document.getElementById("radialMenu");
+const queueList = document.getElementById("queueList");
+const finishBtn = document.getElementById("finishBtn");
+const timeInfo = document.getElementById("timeInfo");
+const statusText = document.getElementById("statusText");
 
 let selectedSpeed = null;
-let working = false;
+let selectedService = null;
+let currentEndTime = null;
 
-const speeds = {
-  rapido: 0.8,
-  normal: 1,
-  lento: 1.3
+const DURATIONS = {
+  corte: 30,
+  corteBarba: 45,
+  sellado: 60,
+  color: 170,
+  permanente: 160
 };
 
-const services = {
-  corte: 25,
-  corte_barba: 40,
-  corte_barba_sellado: 55,
-  permanente: 162
+const SPEED_MOD = {
+  rapido: -10,
+  normal: 0,
+  lento: +10
 };
 
-mainButton.addEventListener("click", () => {
-  if (!working) {
-    radialMenu.classList.toggle("hidden");
-  }
-});
-
-radialMenu.addEventListener("click", (e) => {
-  if (e.target.dataset.speed) {
-    selectedSpeed = e.target.dataset.speed;
-  }
-
-  if (e.target.dataset.service && selectedSpeed) {
-    startService(e.target.dataset.service);
-    radialMenu.classList.add("hidden");
-  }
-});
-
-function startService(service) {
-  const baseTime = services[service];
-  const multiplier = speeds[selectedSpeed];
-  const totalTime = Math.round(baseTime * multiplier);
-
-  const endTime = new Date(Date.now() + totalTime * 60000);
-
-  queueDiv.innerHTML = `
-    <p><strong>Servicio:</strong> ${service.replaceAll("_", " ")}</p>
-    <p><strong>Velocidad:</strong> ${selectedSpeed}</p>
-    <p><strong>Finaliza aprox:</strong> ${endTime.toLocaleTimeString()}</p>
-  `;
-
-  working = true;
-  finishButton.disabled = false;
+function getLimitHour() {
+  const h = new Date().getHours();
+  return h < 13 ? 13 : 22;
 }
 
-finishButton.addEventListener("click", () => {
-  working = false;
-  finishButton.disabled = true;
-  queueDiv.innerHTML = "<p>Servicio finalizado. Listo para iniciar otro.</p>";
-  selectedSpeed = null;
-});
+function updateStatus() {
+  if (!currentEndTime) return;
+
+  const limit = new Date();
+  limit.setHours(getLimitHour(), 0, 0, 0);
+
+  if (currentEndTime <= limit) {
+    mainButton.className = "";
+    statusText.textContent = "Dentro del horario";
+  } else if ((currentEndTime - limit) <= 30 * 60000) {
+    mainButton.className = "warn";
+    statusText.textContent = "Justo al límite";
+  } else {
+    mainButton.className = "bad";
+    statusText.textContent = "Fuera de horario";
+  }
+}
+
+mainButton.onclick = () => {
+  radial.classList.toggle("hidden");
+};
+
+radial.onclick = (e) => {
+  const btn = e.target;
+  if (btn.dataset.speed) selectedSpeed = btn.dataset.speed;
+  if (btn.dataset.service) selectedService = btn.dataset.service;
+
+  if (selectedSpeed && selectedService) {
+    const now = new Date();
+    const minutes =
+      DURATIONS[selectedService] + SPEED_MOD[selectedSpeed];
+
+    currentEndTime = new Date(now.getTime() + minutes * 60000);
+
+    const li = document.createElement("li");
+    li.textContent = `${selectedService} (${selectedSpeed}) → termina ${currentEndTime.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+    queueList.appendChild(li);
+
+    timeInfo.textContent = `Finaliza a las ${currentEndTime.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+    updateStatus();
+
+    radial.classList.add("hidden");
+    selectedSpeed = null;
+    selectedService = null;
+  }
+};
+
+finishBtn.onclick = () => {
+  currentEndTime = null;
+  mainButton.className = "";
+  statusText.textContent = "Dentro del horario";
+  timeInfo.textContent = "Servicio finalizado. Listo para iniciar.";
+};
